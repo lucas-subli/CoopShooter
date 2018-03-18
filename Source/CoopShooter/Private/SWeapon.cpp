@@ -6,6 +6,7 @@
 #include "GameFramework/DamageType.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystem.h"
+#include "Particles/ParticleSystemComponent.h"
 
 
 // Sets default values
@@ -19,6 +20,7 @@ ASWeapon::ASWeapon()
 	RootComponent = MeshComp;
 
 	MuzzleSocketName = "MuzzleSocket";
+	TracerTargetName = "BeamEnd";
 
 }
 
@@ -45,7 +47,9 @@ void ASWeapon::Fire() {
 
 	FVector ShotDirection = EyeRotation.Vector();
 	FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
-	
+
+	// Particle target end point
+	FVector TracerEndPoint = TraceEnd;
 
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(MyOwner);
@@ -57,6 +61,7 @@ void ASWeapon::Fire() {
 	if (World->LineTraceSingleByChannel(Hit, EyeLocation, TraceEnd, ECC_Visibility, QueryParams)) {
 
 		AActor* HitActor = Hit.GetActor();
+		TraceEnd = Hit.ImpactPoint;
 
 		UGameplayStatics::ApplyPointDamage(HitActor, 20.0f, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
 
@@ -66,10 +71,19 @@ void ASWeapon::Fire() {
 
 	}
 
-	DrawDebugLine(World, EyeLocation, TraceEnd, FColor::Green, false, 1.0f, 0, 1.0f);
+	//DrawDebugLine(World, EyeLocation, TraceEnd, FColor::Green, false, 1.0f, 0, 1.0f);
 
 	if (MuzzleEffect) {
 		UGameplayStatics::SpawnEmitterAttached(MuzzleEffect, MeshComp, MuzzleSocketName);
+	}
+
+	if (TracerEffect) {
+		FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocketName);
+		UParticleSystemComponent* TracerComp = UGameplayStatics::SpawnEmitterAtLocation(World, TracerEffect, MuzzleLocation);
+
+		if (TracerComp) {
+			TracerComp->SetVectorParameter(TracerTargetName, TraceEnd);
+		}
 	}
 }
 
@@ -77,6 +91,5 @@ void ASWeapon::Fire() {
 void ASWeapon::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 

@@ -25,7 +25,7 @@ protected:
 
 	// Fire the weapon
 	UFUNCTION(BlueprintCallable, Category = "Fire")
-	void Fire();
+	virtual void Fire();
 
 	// Mesh for the weapon (Setup in blueprint)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -39,6 +39,10 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Fire")
 	FName MuzzleSocketName;
 
+	// Target name for tracer particle spawn
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Fire")
+	FName TracerTargetName;
+
 	// Particle System for muzzle flash
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire")
 	UParticleSystem* MuzzleEffect;
@@ -46,6 +50,10 @@ protected:
 	// Particle System for Hit impact
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire")
 	UParticleSystem* ImpactEffect;
+
+	// Particle System for bullet trajectory
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire")
+	UParticleSystem* TracerEffect;
 
 public:	
 	// Called every frame
