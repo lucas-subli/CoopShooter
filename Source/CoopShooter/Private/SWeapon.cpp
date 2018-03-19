@@ -8,12 +8,15 @@
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemComponent.h"
 
+static int32 DebugWeaponDrawing;
+FAutoConsoleVariableRef CVARDebugWeaponDrawing(TEXT("COOP.DebugWeapons"), DebugWeaponDrawing, TEXT("Draw debug lines for weapons"), ECVF_Cheat);
+
 
 // Sets default values
 ASWeapon::ASWeapon()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	// Setup mesh component
 	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
@@ -71,7 +74,16 @@ void ASWeapon::Fire() {
 
 	}
 
-	//DrawDebugLine(World, EyeLocation, TraceEnd, FColor::Green, false, 1.0f, 0, 1.0f);
+	if (DebugWeaponDrawing > 0) {
+		DrawDebugLine(World, EyeLocation, TraceEnd, FColor::Green, false, 1.0f, 0, 1.0f);
+	}
+
+	PlayFireEffects(TraceEnd);
+}
+
+void ASWeapon::PlayFireEffects(FVector TraceEnd) {
+	UWorld* World = GetWorld();
+	if (!ensure(World != nullptr)) return;
 
 	if (MuzzleEffect) {
 		UGameplayStatics::SpawnEmitterAttached(MuzzleEffect, MeshComp, MuzzleSocketName);
@@ -85,11 +97,17 @@ void ASWeapon::Fire() {
 			TracerComp->SetVectorParameter(TracerTargetName, TraceEnd);
 		}
 	}
-}
+	
+	if (FireSound) {
+		UGameplayStatics::PlaySound2D(World, FireSound);
+	}
 
-// Called every frame
-void ASWeapon::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
+	APawn* MyOwner = Cast<APawn>(GetOwner());
+	if (MyOwner) {
+		APlayerController* PC = Cast<APlayerController>(MyOwner->GetController());
+		if (PC) {
+			PC->ClientPlayCameraShake(FireCamShake);
+		}
+	}
 }
 

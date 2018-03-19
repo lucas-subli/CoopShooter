@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "SCharacter.generated.h"
 
+class ASWeapon;
 class UCameraComponent;
 class USpringArmComponent;
 
@@ -31,9 +32,18 @@ private:
 	// End Crouch action
 	void EndCrouch();
 
+	// Begin zoom action
+	void BeginZoom();
+
+	// End zoom action
+	void EndZoom();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	// Fires the current weapon
+	void Fire();
 
 	// The view camera variable for this character
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
@@ -42,6 +52,39 @@ protected:
 	// The spring arm to hold the camera
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	USpringArmComponent* SpringArmComp;
+
+	// Controls aims down the sight
+	bool bWantsToZoom;
+
+	// Controls how fast we can zoom in
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay", meta = (ClampMin = 0.1, ClampMax = 100))
+	float ZoomInterpSpeed;
+
+	// Control the value of the zoom
+	UPROPERTY(EditDefaultsOnly, Category="Gameplay")
+	float ZoomedFOV;
+
+	// Controls the default FOV
+	UPROPERTY(EditDefaultsOnly, Category="Gameplay")
+	float DefaultFOV;
+
+	// Control the value of the zoom
+	float DefaultMaxWalkSpeed;
+
+	// Controls the default FOV
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay")
+	float AimingWalkSpeed;
+
+	// Current weapon owned by the player
+	ASWeapon* CurrentWeapon;
+
+	// Default weapon to spawn with
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	TSubclassOf<ASWeapon> StarterWeaponClass;
+
+	// Weapon attachment point
+	UPROPERTY(VisibleDefaultsOnly, Category = "Weapon")
+	FName WeaponAttachSocketName;
 
 public:	
 	// Called every frame

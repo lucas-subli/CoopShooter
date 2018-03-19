@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Sound/SoundBase.h"
 #include "SWeapon.generated.h"
+
 
 class USkeletalMeshComponent;
 class UDamageType;
@@ -23,9 +25,8 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	// Fire the weapon
-	UFUNCTION(BlueprintCallable, Category = "Fire")
-	virtual void Fire();
+	// Play fire effects
+	void PlayFireEffects(FVector TraceEnd);
 
 	// Mesh for the weapon (Setup in blueprint)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -55,10 +56,19 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire")
 	UParticleSystem* TracerEffect;
 
+	// Camera Shake
+	UPROPERTY(EditDefaultsOnly, Category = "Fire")
+	TSubclassOf<UCameraShake> FireCamShake;
+
+	// Sound for firing weapon
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire")
+	USoundBase* FireSound;
+
 public:	
 	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
+	//virtual void Tick(float DeltaTime) override;
 	
-	
+	// Fire the weapon
+	UFUNCTION(BlueprintCallable, Category = "Fire")
+	virtual void Fire();
 };
