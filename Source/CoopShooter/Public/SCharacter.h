@@ -43,7 +43,10 @@ protected:
 	virtual void BeginPlay() override;
 
 	// Fires the current weapon
-	void Fire();
+	void StartFire();
+
+	// Stop Firing the current weapon
+	void StopFire();
 
 	// The view camera variable for this character
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")

@@ -8,9 +8,11 @@
 #include "SWeapon.generated.h"
 
 
-class USkeletalMeshComponent;
+class UCameraShake;
 class UDamageType;
 class UParticleSystem;
+class USkeletalMeshComponent;
+
 
 UCLASS()
 class COOPSHOOTER_API ASWeapon : public AActor
@@ -21,12 +23,20 @@ public:
 	// Sets default values for this actor's properties
 	ASWeapon();
 
+private:
+
+	// Derived from fire rate
+	float TimeBetweenShots;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	// Fire the weapon
+	virtual void Fire();
+
 	// Play fire effects
-	void PlayFireEffects(FVector TraceEnd);
+	void PlayFireEffects(FVector TraceEnd, FHitResult* Hit);
 
 	// Mesh for the weapon (Setup in blueprint)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -44,16 +54,36 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Fire")
 	FName TracerTargetName;
 
+	// Base Damage to apply
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Damage")
+	float BaseDamage;
+
+	// Critical hit damage multiplier
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Damage")
+	float CriticalMultiplier;
+
+	// Rate of fire for the weapon in shots per minute
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Damage")
+	float FireRate;
+
 	// Particle System for muzzle flash
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects")
 	UParticleSystem* MuzzleEffect;
 
 	// Particle System for Hit impact
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire")
-	UParticleSystem* ImpactEffect;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects")
+	UParticleSystem* DefaultImpactEffect;
+
+	// Particle System for Hit impact
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects")
+	UParticleSystem* FleshImpactEffect;
+
+	// Particle System for Hit impact
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects")
+	UParticleSystem* FleshVulnerableImpactEffect;
 
 	// Particle System for bullet trajectory
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects")
 	UParticleSystem* TracerEffect;
 
 	// Camera Shake
@@ -61,14 +91,26 @@ protected:
 	TSubclassOf<UCameraShake> FireCamShake;
 
 	// Sound for firing weapon
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Fire")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects")
 	USoundBase* FireSound;
+
+	// Sound for critical hit
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects")
+	USoundBase* CriticalSound;
+
+	// Time between shots in auto fire
+	FTimerHandle TimerHandle_TimeBetweenShots;
+
+	// Time between shots in auto fire
+	float LastFiredTime;
 
 public:	
 	// Called every frame
 	//virtual void Tick(float DeltaTime) override;
-	
-	// Fire the weapon
-	UFUNCTION(BlueprintCallable, Category = "Fire")
-	virtual void Fire();
+
+	// Auto fire the weapon
+	virtual void StartFire();
+
+	// Stop auto firing the weapon the weapon
+	virtual void StopFire();
 };
