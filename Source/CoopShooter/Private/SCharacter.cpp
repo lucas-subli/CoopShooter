@@ -4,6 +4,8 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
+#include "SHealthComponent.h"
+#include "CoopShooter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "SWeapon.h"
@@ -15,8 +17,12 @@ ASCharacter::ASCharacter()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	// Default is to be alive
+	bDied = false;
+
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_COLLISION_WEAPON, ECR_Ignore);
 
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
@@ -42,6 +48,9 @@ ASCharacter::ASCharacter()
 	CameraComp->SetupAttachment(SpringArmComp, USpringArmComponent::SocketName);
 	CameraComp->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
+	// Create the HealthComponent
+	HealthComp = CreateDefaultSubobject<USHealthComponent>(TEXT("HealthComp"));
+
 	// Set the default zoom
 	bWantsToZoom = false;
 	ZoomedFOV = 45.0f;
@@ -65,6 +74,7 @@ void ASCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	DefaultFOV = CameraComp->FieldOfView;
+	HealthComp->OnHealthChanged.AddDynamic(this, &ASCharacter::OnHealthChanged);
 
 	//Spawn Default weapon
 	if (StarterWeaponClass && GetWorld()) {
@@ -89,6 +99,18 @@ void ASCharacter::StartFire() {
 void ASCharacter::StopFire() {
 	if (CurrentWeapon) {
 		CurrentWeapon->StopFire();
+	}
+}
+
+void ASCharacter::OnHealthChanged(USHealthComponent* HealthComp, float NewHealth, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser) {
+	if (NewHealth <= 0.0f && !bDied) {
+		// Die
+		bDied = true;
+		GetMovementComponent()->StopMovementImmediately();
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		DetachFromControllerPendingDestroy();
+		SetLifeSpan(10.0f);
 	}
 }
 

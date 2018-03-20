@@ -8,6 +8,7 @@
 
 class ASWeapon;
 class UCameraComponent;
+class USHealthComponent;
 class USpringArmComponent;
 
 UCLASS()
@@ -48,6 +49,10 @@ protected:
 	// Stop Firing the current weapon
 	void StopFire();
 
+	// Handle damage / Heal
+	UFUNCTION()
+	void OnHealthChanged(USHealthComponent* OwningHealthComp, float NewHealth, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+
 	// The view camera variable for this character
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	UCameraComponent* CameraComp;
@@ -56,8 +61,16 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	USpringArmComponent* SpringArmComp;
 
+	// The spring arm to hold the camera
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Health")
+	USHealthComponent* HealthComp;
+
 	// Controls aims down the sight
 	bool bWantsToZoom;
+
+	// Are we dead ?
+	UPROPERTY(BlueprintReadOnly, Category = "Health")
+	bool bDied;
 
 	// Controls how fast we can zoom in
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay", meta = (ClampMin = 0.1, ClampMax = 100))
