@@ -13,6 +13,22 @@ class UDamageType;
 class UParticleSystem;
 class USkeletalMeshComponent;
 
+// Contains information of a single hit scan weapon line trace for net replication
+USTRUCT()
+struct FHitScanTrace {
+	GENERATED_BODY()
+public:
+	// Magic number just to force update on multiple sequence shots
+	UPROPERTY()
+	int32 RandomSeed;
+
+	UPROPERTY()
+	FVector_NetQuantize TraceTo;
+
+	UPROPERTY()
+	TEnumAsByte<EPhysicalSurface> SurfaceType;
+
+};
 
 UCLASS()
 class COOPSHOOTER_API ASWeapon : public AActor
@@ -35,8 +51,19 @@ protected:
 	// Fire the weapon
 	virtual void Fire();
 
+	// Fire the weapon in the server
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerFire();
+
 	// Play fire effects
-	void PlayFireEffects(FVector TraceEnd, FHitResult* Hit);
+	void PlayFireEffects(FVector TraceEnd);
+
+	// Play impact effects
+	void PlayImpactEffects(EPhysicalSurface SurfaceType, FVector ImpactPoint);
+
+	// Replicate hit scan traces
+	UFUNCTION()
+	void OnRep_HitScanTrace();
 
 	// Mesh for the weapon (Setup in blueprint)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -103,6 +130,10 @@ protected:
 
 	// Time between shots in auto fire
 	float LastFiredTime;
+
+	// Hit Scan trace to replicate over the network
+	UPROPERTY(ReplicatedUsing=OnRep_HitScanTrace)
+	FHitScanTrace HitScanTrace;
 
 public:	
 	// Called every frame

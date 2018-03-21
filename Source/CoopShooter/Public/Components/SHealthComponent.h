@@ -31,7 +31,7 @@ protected:
 	float MaxHealth;
 
 	// Health points owned at the moment
-	UPROPERTY(BlueprintReadOnly, Category = "Health")
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Health")
 	float CurrentHealth;
 
 public:	

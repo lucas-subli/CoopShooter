@@ -69,7 +69,7 @@ protected:
 	bool bWantsToZoom;
 
 	// Are we dead ?
-	UPROPERTY(BlueprintReadOnly, Category = "Health")
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Health")
 	bool bDied;
 
 	// Controls how fast we can zoom in
@@ -92,6 +92,7 @@ protected:
 	float AimingWalkSpeed;
 
 	// Current weapon owned by the player
+	UPROPERTY(Replicated)
 	ASWeapon* CurrentWeapon;
 
 	// Default weapon to spawn with

@@ -28,6 +28,9 @@ protected:
 	UFUNCTION()
 	void OnHealthChanged(USHealthComponent* OwningHealthComp, float NewHealth, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
+	UFUNCTION()
+	void OnRep_Exploded();
+
 	// We have health to be able to explode
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	USHealthComponent* HealthComp;
@@ -41,6 +44,7 @@ protected:
 	URadialForceComponent* RadialForceComp;
 
 	// Have we already exploded ?
+	UPROPERTY(ReplicatedUsing=OnRep_Exploded)
 	bool bExploded;
 
 	// Damage type
