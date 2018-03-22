@@ -26,7 +26,8 @@ protected:
 
 	// Callback for when our health changes
 	UFUNCTION()
-	void OnHealthChanged(USHealthComponent* OwningHealthComp, float NewHealth, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+	void OnHealthChanged(USHealthComponent* OwningHealthComp, float NewHealth, float HealthDelta, const class UDamageType* DamageType, 
+		class AController* InstigatedBy, AActor* DamageCauser);
 
 	UFUNCTION()
 	void OnRep_Exploded();

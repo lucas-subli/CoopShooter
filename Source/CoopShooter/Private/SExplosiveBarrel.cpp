@@ -2,6 +2,9 @@
 
 #include "SExplosiveBarrel.h"
 #include "Components/StaticMeshComponent.h"
+#include "Particles/ParticleSystem.h"
+#include "Sound/SoundBase.h"
+#include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "PhysicsEngine/RadialForceComponent.h"
 #include "SHealthComponent.h"
@@ -46,7 +49,8 @@ void ASExplosiveBarrel::BeginPlay()
 	
 }
 
-void ASExplosiveBarrel::OnHealthChanged(USHealthComponent* OwningHealthComp, float NewHealth, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser) {
+void ASExplosiveBarrel::OnHealthChanged(USHealthComponent* OwningHealthComp, float NewHealth, float HealthDelta, const class UDamageType* DamageType, 
+	class AController* InstigatedBy, AActor* DamageCauser) {
 	// already exploded nothing to do here
 	if (bExploded) return;
 
