@@ -2,6 +2,7 @@
 
 #include "STrackerBot.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/SphereComponent.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 #include "AI/Navigation/NavigationSystem.h"
@@ -10,6 +11,9 @@
 #include "SHealthComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Engine/World.h"
+#include "SCharacter.h"
+#include "TimerManager.h"
+#include "Sound/SoundCue.h"
 
 // Sets default values
 ASTrackerBot::ASTrackerBot()
@@ -25,12 +29,30 @@ ASTrackerBot::ASTrackerBot()
 
 	// Initialize the Health
 	HealthComp = CreateDefaultSubobject<USHealthComponent>(TEXT("HealthComp"));
-	HealthComp->OnHealthChanged.AddDynamic(this, &ASTrackerBot::HandleTakeDamage);
+	HealthComp->SetMaxHealth(30.0f);
 
+	// Initialize the Sphere comp
+	SphereComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
+	SphereComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	SphereComp->SetCollisionResponseToAllChannels(ECR_Ignore);
+	SphereComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	SphereComp->SetupAttachment(RootComponent);
 
+	// Setup default values
+	bStartedSelfDestruct = false;
 	bUseVelocityChange = true;
-	MovementForce = 1000;
-	ProximityTresh = 100;
+	MovementForce = 1000.0f;
+	ProximityTresh = 100.0f;
+	DamageRadius = 200.0f;
+	DamageValue = 40.0f;
+	SelfDamageInterval = 0.3f;
+	NearbyBonusRange = 600.0f;
+	MaxPowerLevel = 4;
+	SphereComp->SetSphereRadius(DamageRadius * 0.8);
+
+	// Network replication
+	SetReplicates(true);
+	SetReplicateMovement(true);
 }
 
 // Called when the game starts or when spawned
@@ -38,8 +60,17 @@ void ASTrackerBot::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//Initial move to
-	NextPathPoint = GetNextPathPoint();
+	if (Role == ROLE_Authority) {
+		//Initial move to
+		NextPathPoint = GetNextPathPoint();
+
+		// Every second we update our power-level based on nearby bots
+		FTimerHandle TimerHandle_CheckPowerLevel;
+		GetWorldTimerManager().SetTimer(TimerHandle_CheckPowerLevel, this, &ASTrackerBot::OnCheckNearbyBots, 1.0f, true);
+	}
+
+	// Setup Delegates
+	HealthComp->OnHealthChanged.AddDynamic(this, &ASTrackerBot::HandleTakeDamage);
 }
 
 // FInds the next point
@@ -61,6 +92,92 @@ FVector ASTrackerBot::GetNextPathPoint() {
 	return GetActorLocation();
 }
 
+void ASTrackerBot::SelfDestruct() {
+
+	if (bExploded) return;
+
+	bExploded = true;
+
+	if (ExplosionEffect) {
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
+	}
+
+	if (ExplosionSound) {
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ExplosionSound, GetActorLocation());
+	}
+
+	// Give time for the client to display effects
+	MeshComp->SetVisibility(false, true);
+	MeshComp->SetSimulatePhysics(false);
+	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	if (Role == ROLE_Authority) {
+		TArray<AActor*> IgnoredActors;
+		IgnoredActors.Add(this);
+
+		float ActualDamage = DamageValue + (DamageValue * 0.5 * PowerLevel);
+
+		// Apply damage
+		UGameplayStatics::ApplyRadialDamage(this, ActualDamage, GetActorLocation(), DamageRadius, DmgType, IgnoredActors, this, GetInstigatorController(), true);
+
+		SetLifeSpan(2.0f);
+	}
+}
+
+void ASTrackerBot::DamageSelf() {
+	UGameplayStatics::ApplyDamage(this, 10.0f, GetInstigatorController(), this, DmgType);
+}
+
+void ASTrackerBot::OnCheckNearbyBots() {
+
+	// Create temporary collision shape for overlaps
+	FCollisionShape CollShape;
+	CollShape.SetSphere(NearbyBonusRange);
+
+	// Only find Pawns (players and AI bots)
+	FCollisionObjectQueryParams QueryParams;
+	// Our tracker bots mesh component is set to Physics Body in Blueprint (default profile of physics simulated actors)
+	QueryParams.AddObjectTypesToQuery(ECC_PhysicsBody);
+	QueryParams.AddObjectTypesToQuery(ECC_Pawn);
+
+	TArray<FOverlapResult> Overlaps;
+	GetWorld()->OverlapMultiByObjectType(Overlaps, GetActorLocation(), FQuat::Identity, QueryParams, CollShape);
+
+	DrawDebugSphere(GetWorld(), GetActorLocation(), NearbyBonusRange, 12, FColor::White, false, 1.0f);
+
+	int32 NrOfBots = 0;
+	// loop over the results using a "range based for loop"
+	for (FOverlapResult Result : Overlaps) {
+		// Check if we overlapped with another tracker bot (ignoring players and other bot types)
+		ASTrackerBot* Bot = Cast<ASTrackerBot>(Result.GetActor());
+		// Ignore this tracker bot instance
+		if (Bot && Bot != this) {
+			NrOfBots++;
+		}
+	}
+
+	PowerLevel = FMath::Clamp(NrOfBots, 0, MaxPowerLevel);
+
+	// Update the material color
+	if (MatInst == nullptr) {
+		MatInst = MeshComp->CreateAndSetMaterialInstanceDynamicFromMaterial(0, MeshComp->GetMaterial(0));
+	}
+	if (MatInst) {
+		// Convert to a float between 0 and 1 just like an 'Alpha'
+		float Alpha = PowerLevel / (float)MaxPowerLevel;
+		// Note: (float)MaxPowerLevel converts the int32 to a float, so we don't end with integer division
+
+		MatInst->SetScalarParameterValue("PowerLevelAlpha", Alpha);
+	}
+
+	// Draw on the bot location
+	DrawDebugString(GetWorld(), FVector(0, 0, 0), FString::FromInt(PowerLevel), this, FColor::White, 1.0f, true);
+}
+
+void ASTrackerBot::RefreshPath() {
+	NextPathPoint = GetNextPathPoint();
+}
+
 void ASTrackerBot::HandleTakeDamage(USHealthComponent* OwningHealthComp, float NewHealth, float HealthDelta, const class UDamageType* DamageType, 
 	class AController* InstigatedBy, AActor* DamageCauser) {
 
@@ -73,24 +190,10 @@ void ASTrackerBot::HandleTakeDamage(USHealthComponent* OwningHealthComp, float N
 		MatInst->SetScalarParameterValue("LastTimeDamageTaken", GetWorld()->TimeSeconds);
 	}
 
-
-	// already exploded nothing to do here
-	if (bExploded) return;
-
 	if (NewHealth <= 0) {
-		//Explode
-		bExploded = true;
-		// This only runs (Due to health comp) on server so we have to call manually
-		//OnRep_Exploded();
-
-		/*FVector ExplosionOrigin = GetActorLocation();
-		TArray<AActor*> IgnoreActors;
-
-		UGameplayStatics::ApplyRadialDamageWithFalloff(GetWorld(), 100.0f, 20.0f, ExplosionOrigin, DamageRadius / 2, DamageRadius, 10.0f, DmgType, IgnoreActors, this);
-		RadialForceComp->FireImpulse();*/
+		SelfDestruct();
+		DrawDebugSphere(GetWorld(), GetActorLocation(), DamageRadius, 12.0f, FColor::Red, false, 10.0f, 0, 1.0f);
 	}
-
-	UE_LOG(LogTemp, Warning, TEXT("Health %s"), *FString::SanitizeFloat(NewHealth));
 }
 
 // Called every frame
@@ -98,21 +201,43 @@ void ASTrackerBot::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	float DistanceToTarget = (GetActorLocation() - NextPathPoint).Size();
+	if (Role == ROLE_Authority && !bExploded) {
+		float DistanceToTarget = (GetActorLocation() - NextPathPoint).Size();
 
-	if (DistanceToTarget <= ProximityTresh) {
-		NextPathPoint = GetNextPathPoint();
-	} else {
-		// keep moving towards target
-		FVector ForceDirection = NextPathPoint - GetActorLocation();
-		ForceDirection.Normalize();
-		ForceDirection *= MovementForce;
+		if (DistanceToTarget <= ProximityTresh) {
+			NextPathPoint = GetNextPathPoint();
+		} else {
+			// keep moving towards target
+			FVector ForceDirection = NextPathPoint - GetActorLocation();
+			ForceDirection.Normalize();
+			ForceDirection *= MovementForce;
 
-		MeshComp->AddForce(ForceDirection, NAME_None, bUseVelocityChange);
+			MeshComp->AddForce(ForceDirection, NAME_None, bUseVelocityChange);
 
-		DrawDebugDirectionalArrow(GetWorld(), GetActorLocation(), GetActorLocation() + ForceDirection, 32, FColor::Yellow, false, 0.0f, 0, 1.0f);
+			DrawDebugDirectionalArrow(GetWorld(), GetActorLocation(), GetActorLocation() + ForceDirection, 32, FColor::Yellow, false, 0.0f, 0, 1.0f);
+		}
+		DrawDebugSphere(GetWorld(), NextPathPoint, 20.0f, 12.0f, FColor::Yellow, false, 0.0f, 1.0f);
 	}
+}
 
-	DrawDebugSphere(GetWorld(), NextPathPoint, 20.0f, 12.0f, FColor::Yellow, false, 0.0f, 1.0f);
+void ASTrackerBot::NotifyActorBeginOverlap(AActor* OtherActor) {
+
+	Super::NotifyActorBeginOverlap(OtherActor);
+
+	if (!bStartedSelfDestruct && !bExploded) {
+		ASCharacter* PlayerPawn = Cast<ASCharacter>(OtherActor);
+
+		if (PlayerPawn) {
+			bStartedSelfDestruct = true;
+			if (ROLE_Authority == ROLE_Authority) {
+				// We overlapped with a player
+				GetWorldTimerManager().SetTimer(TimerHandle_SelfDamage, this, &ASTrackerBot::DamageSelf, SelfDamageInterval, true, 0.0f);
+			}
+
+			if (SelfDestructWarningSound) {
+				UGameplayStatics::SpawnSoundAttached(SelfDestructWarningSound, RootComponent);
+			}
+		}
+	}
 }
 

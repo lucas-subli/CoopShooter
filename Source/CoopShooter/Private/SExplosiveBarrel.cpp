@@ -20,6 +20,7 @@ ASExplosiveBarrel::ASExplosiveBarrel()
 	//Setup health comp
 	HealthComp = CreateDefaultSubobject<USHealthComponent>(TEXT("HealthComp"));
 	HealthComp->OnHealthChanged.AddDynamic(this, &ASExplosiveBarrel::OnHealthChanged);
+	HealthComp->SetMaxHealth(40.0f);
 
 	//Setup mesh comp
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));

@@ -29,7 +29,7 @@ ASWeapon::ASWeapon()
 	MuzzleSocketName = "MuzzleSocket";
 	TracerTargetName = "BeamEnd";
 
-	BaseDamage = 20.0f;
+	BaseDamage = 21.0f;
 	CriticalMultiplier = 2.0f;
 	FireRate = 300;
 

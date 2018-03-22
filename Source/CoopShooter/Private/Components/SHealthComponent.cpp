@@ -12,7 +12,7 @@ USHealthComponent::USHealthComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
 
-	MaxHealth = 100.0f;
+	SetMaxHealth(100.0f);
 	SetCurrentHealth(100.0f);
 
 	SetIsReplicated(true);
@@ -23,7 +23,6 @@ USHealthComponent::USHealthComponent()
 void USHealthComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
 
 	AActor* MyOwner = GetOwner();
 	// Only hook on server
@@ -44,6 +43,20 @@ float USHealthComponent::SetCurrentHealth(float NewHealth) {
 	
 	CurrentHealth = FMath::Clamp(NewHealth, 0.0f, MaxHealth);
 	return CurrentHealth;
+}
+
+float USHealthComponent::SetMaxHealth(float NewMax) {
+	MaxHealth = FMath::Max(NewMax, 1.0f);
+	if (CurrentHealth > MaxHealth) {
+		CurrentHealth = MaxHealth;
+	}
+	return MaxHealth;
+}
+
+void USHealthComponent::OnRep_Health(float OldHealth) {
+	float Damage = CurrentHealth - OldHealth;
+	OnHealthChanged.Broadcast(this, CurrentHealth, Damage, nullptr, nullptr, nullptr);
+
 }
 
 void USHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const {

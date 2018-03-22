@@ -26,20 +26,27 @@ protected:
 	UFUNCTION()
 	void HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
+	// Replicate health
+	UFUNCTION()
+	void OnRep_Health(float OldHealth);
+
 	// Max Health points possible
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
 	float MaxHealth;
 
 	// Health points owned at the moment
-	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Health")
+	UPROPERTY(ReplicatedUsing=OnRep_Health, BlueprintReadOnly, Category = "Health")
 	float CurrentHealth;
 
 public:	
 	// Called every frame
 	/*virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;*/
 
-	//Set current Health points
+	// Set current Health points
 	float SetCurrentHealth(float NewHealth);
+
+	// Set max Health points
+	float SetMaxHealth(float NewMax);
 
 	// On health Changed
 	UPROPERTY(BlueprintAssignable, Category = "Events")
