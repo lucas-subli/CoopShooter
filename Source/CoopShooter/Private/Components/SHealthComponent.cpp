@@ -12,8 +12,8 @@ USHealthComponent::USHealthComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
 
-	SetMaxHealth(100.0f);
-	SetCurrentHealth(100.0f);
+	MaxHealth = 100.0f;
+	SetCurrentHealth(MaxHealth);
 
 	SetIsReplicated(true);
 }
@@ -35,14 +35,21 @@ void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, 
 	if (Damage <= 0.0f) return;
 
 	CurrentHealth = SetCurrentHealth(CurrentHealth - Damage);
-
 	OnHealthChanged.Broadcast(this, CurrentHealth, Damage, DamageType, InstigatedBy, DamageCauser);
 }
 
 float USHealthComponent::SetCurrentHealth(float NewHealth) {
 	
+ 	UE_LOG(LogTemp, Warning, TEXT("HealthChanged from: %s to %s"), *FString::SanitizeFloat(CurrentHealth), *FString::SanitizeFloat(FMath::Clamp(NewHealth, 0.0f, MaxHealth)));
 	CurrentHealth = FMath::Clamp(NewHealth, 0.0f, MaxHealth);
 	return CurrentHealth;
+}
+
+void USHealthComponent::Heal(float HealAmount) {
+
+	if (HealAmount <= 0 || CurrentHealth <= 0) return;
+	OnHealthChanged.Broadcast(this, CurrentHealth, -HealAmount, nullptr, nullptr, nullptr);
+	SetCurrentHealth(CurrentHealth + HealAmount);
 }
 
 float USHealthComponent::SetMaxHealth(float NewMax) {

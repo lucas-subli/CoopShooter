@@ -45,6 +45,10 @@ public:
 	// Set current Health points
 	float SetCurrentHealth(float NewHealth);
 
+	// Heal the component
+	UFUNCTION(BlueprintCallable, Category = "HealthComponent")
+	void Heal(float HealAmount);
+
 	// Set max Health points
 	float SetMaxHealth(float NewMax);
 
