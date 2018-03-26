@@ -38,12 +38,12 @@ protected:
 	UPROPERTY(ReplicatedUsing=OnRep_Health, BlueprintReadOnly, Category = "Health")
 	float CurrentHealth;
 
+	// Tells us if we are already dead (Omae Wa Mou Shindeiru)
+	bool bIsDead;
+
 public:	
 	// Called every frame
 	/*virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;*/
-
-	// Set current Health points
-	float SetCurrentHealth(float NewHealth);
 
 	// Heal the component
 	UFUNCTION(BlueprintCallable, Category = "HealthComponent")
@@ -51,6 +51,12 @@ public:
 
 	// Set max Health points
 	float SetMaxHealth(float NewMax);
+
+	// Set current Health points
+	float SetCurrentHealth(float NewHealth);
+
+	// Get current Health points
+	float GetCurrentHealth() const;
 
 	// On health Changed
 	UPROPERTY(BlueprintAssignable, Category = "Events")

@@ -2,6 +2,8 @@
 
 #include "SHealthComponent.h"
 #include "GameFramework/Actor.h"
+#include "SGameMode.h"
+#include "Engine/World.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -13,7 +15,7 @@ USHealthComponent::USHealthComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 
 	MaxHealth = 100.0f;
-	SetCurrentHealth(MaxHealth);
+	CurrentHealth = MaxHealth;
 
 	SetIsReplicated(true);
 }
@@ -24,6 +26,8 @@ void USHealthComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	SetCurrentHealth(MaxHealth);
+
 	AActor* MyOwner = GetOwner();
 	// Only hook on server
 	if (MyOwner && GetOwnerRole() == ROLE_Authority) {
@@ -32,10 +36,25 @@ void USHealthComponent::BeginPlay()
 }
 
 void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser) {
-	if (Damage <= 0.0f) return;
+
+	if (Damage <= 0.0f || bIsDead) return;
+
+	//if (DamageCauser != DamagedActor && IsFriendly(DamagedActor, DamageCauser)) {
+	//	return;
+	//}
 
 	CurrentHealth = SetCurrentHealth(CurrentHealth - Damage);
+
+	bIsDead = CurrentHealth <= KINDA_SMALL_NUMBER;
+
 	OnHealthChanged.Broadcast(this, CurrentHealth, Damage, DamageType, InstigatedBy, DamageCauser);
+
+	if (bIsDead) {
+		ASGameMode* GM = Cast<ASGameMode>(GetWorld()->GetAuthGameMode());
+		if (GM) {
+			GM->OnActorKilled.Broadcast(GetOwner(), DamageCauser, InstigatedBy);
+		}
+	}
 }
 
 float USHealthComponent::SetCurrentHealth(float NewHealth) {
@@ -64,6 +83,11 @@ void USHealthComponent::OnRep_Health(float OldHealth) {
 	float Damage = CurrentHealth - OldHealth;
 	OnHealthChanged.Broadcast(this, CurrentHealth, Damage, nullptr, nullptr, nullptr);
 
+}
+
+
+float USHealthComponent::GetCurrentHealth() const {
+	return CurrentHealth;
 }
 
 void USHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const {

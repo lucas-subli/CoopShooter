@@ -8,6 +8,7 @@
 #include "CoopShooter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Engine/World.h"
 #include "Net/UnrealNetwork.h"
 #include "SWeapon.h"
 
@@ -108,6 +109,7 @@ void ASCharacter::OnHealthChanged(USHealthComponent* HealthComp, float NewHealth
 	if (NewHealth <= 0.0f && !bDied) {
 		// Die
 		bDied = true;
+		StopFire();
 		GetMovementComponent()->StopMovementImmediately();
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
