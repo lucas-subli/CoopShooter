@@ -82,16 +82,20 @@ protected:
 	FName TracerTargetName;
 
 	// Base Damage to apply
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Damage")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Damage")
 	float BaseDamage;
 
 	// Critical hit damage multiplier
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Damage")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Damage")
 	float CriticalMultiplier;
 
 	// Rate of fire for the weapon in shots per minute
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Damage")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Damage")
 	float FireRate;
+
+	// Bullet spread in degrees
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Damage", meta = (ClampMin=0.0f))
+	float BulletSpread;
 
 	// Particle System for muzzle flash
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects")

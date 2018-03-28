@@ -32,6 +32,7 @@ ASWeapon::ASWeapon()
 	BaseDamage = 21.0f;
 	CriticalMultiplier = 2.0f;
 	FireRate = 300;
+	BulletSpread = 0.5f;
 
 	SetReplicates(true);
 	NetUpdateFrequency = 66.0f;
@@ -66,7 +67,10 @@ void ASWeapon::Fire() {
 
 	MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
 
+	// Bullet spread
 	FVector ShotDirection = EyeRotation.Vector();
+	float HalfRad = FMath::DegreesToRadians(BulletSpread);
+	ShotDirection = FMath::VRandCone(ShotDirection, HalfRad, HalfRad);
 	FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
 
 	// Particle target end point
@@ -91,7 +95,7 @@ void ASWeapon::Fire() {
 		if (SurfaceHit == SURFACE_FLESHVULNERABLE) {
 			ActualDamage *= CriticalMultiplier;
 		}
-		UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), this, DamageType);
+		UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyOwner->GetInstigatorController(), MyOwner, DamageType);
 
 		PlayImpactEffects(SurfaceHit, TraceEnd);
 	}

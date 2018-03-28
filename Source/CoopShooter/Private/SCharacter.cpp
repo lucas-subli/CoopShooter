@@ -11,6 +11,7 @@
 #include "Engine/World.h"
 #include "Net/UnrealNetwork.h"
 #include "SWeapon.h"
+#include "SGameInstance.h"
 
 
 // Sets default values
@@ -154,6 +155,9 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction("Zoom", IE_Pressed, this, &ASCharacter::BeginZoom);
 	PlayerInputComponent->BindAction("Zoom", IE_Released, this, &ASCharacter::EndZoom);
 
+	// Call In Game Menu
+	PlayerInputComponent->BindAction("InGameMenu", IE_Pressed, this, &ASCharacter::InGameMenu);
+
 }
 
 FVector ASCharacter::GetPawnViewLocation() const {
@@ -189,6 +193,13 @@ void ASCharacter::BeginZoom() {
 void ASCharacter::EndZoom() {
 	bWantsToZoom = false;
 	GetCharacterMovement()->MaxWalkSpeed = DefaultMaxWalkSpeed;
+}
+
+
+void ASCharacter::InGameMenu() {
+	USGameInstance* aSGameInstance = Cast<USGameInstance>(this->GetGameInstance());
+	if (!ensure(aSGameInstance != nullptr)) return;
+	aSGameInstance->LoadInGameMenu();
 }
 
 void ASCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const {

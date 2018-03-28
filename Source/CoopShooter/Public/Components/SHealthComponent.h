@@ -18,6 +18,11 @@ public:
 	// Sets default values for this component's properties
 	USHealthComponent();
 
+	// Team number to identify allies and enemies
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Team")
+	uint8 TeamNum;
+
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -57,6 +62,10 @@ public:
 
 	// Get current Health points
 	float GetCurrentHealth() const;
+
+	// Get current Health points
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Team")
+	static bool IsFriendly(AActor* ActorA, AActor* ActorB);
 
 	// On health Changed
 	UPROPERTY(BlueprintAssignable, Category = "Events")

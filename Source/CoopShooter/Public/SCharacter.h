@@ -43,15 +43,12 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	// Fires the current weapon
-	void StartFire();
-
-	// Stop Firing the current weapon
-	void StopFire();
-
 	// Handle damage / Heal
 	UFUNCTION()
 	void OnHealthChanged(USHealthComponent* OwningHealthComp, float NewHealth, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+
+	/** Call the InGameMenu. */
+	void InGameMenu();
 
 	// The view camera variable for this character
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
@@ -112,6 +109,14 @@ public:
 
 	// Override to use our camera
 	virtual FVector GetPawnViewLocation() const override;
+
+	// Fires the current weapon
+	UFUNCTION(BlueprintCallable, Category = "Player")
+	void StartFire();
+
+	// Stop Firing the current weapon
+	UFUNCTION(BlueprintCallable, Category = "Player")
+	void StopFire();
 	
 	
 };
