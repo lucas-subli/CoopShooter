@@ -106,16 +106,27 @@ void ASCharacter::StopFire() {
 	}
 }
 
+void ASCharacter::Client_StopFire_Implementation() {
+	if (CurrentWeapon) {
+		CurrentWeapon->StopFire();
+	}
+}
+
 void ASCharacter::OnHealthChanged(USHealthComponent* HealthComp, float NewHealth, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser) {
 	if (NewHealth <= 0.0f && !bDied) {
 		// Die
 		bDied = true;
 		StopFire();
+		Client_StopFire();
 		GetMovementComponent()->StopMovementImmediately();
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 		DetachFromControllerPendingDestroy();
 		SetLifeSpan(10.0f);
+
+		if (CurrentWeapon) {
+			CurrentWeapon->SetLifeSpan(10.0f);
+		}
 	}
 }
 

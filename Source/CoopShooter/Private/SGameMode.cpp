@@ -62,7 +62,6 @@ void ASGameMode::PrepareForNextWave() {
 	GetWorldTimerManager().SetTimer(TimerHandle_NextWaveStart, this, &ASGameMode::StartWave, TimeBetweenWaves, false);
 	SetWaveState(EWaveState::WaitingToStart);
 	RestartDeadPlayers();
-
 }
 
 void ASGameMode::CheckWaveState() {

@@ -63,8 +63,10 @@ protected:
 	// Game over
 	void GameOver();
 
+	// Changes the wave state
 	void SetWaveState(EWaveState NewState);
 
+	// When the round is over, resurrect all the players
 	void RestartDeadPlayers();
 
 public:

@@ -117,6 +117,9 @@ public:
 	// Stop Firing the current weapon
 	UFUNCTION(BlueprintCallable, Category = "Player")
 	void StopFire();
+
+	UFUNCTION(Client, Reliable)
+	void Client_StopFire();
 	
 	
 };

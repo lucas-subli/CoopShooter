@@ -55,6 +55,11 @@ void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, 
 	if (bIsDead) {
 		ASGameMode* GM = Cast<ASGameMode>(GetWorld()->GetAuthGameMode());
 		if (GM) {
+			if (InstigatedBy != nullptr) {
+				UE_LOG(LogTemp, Warning, TEXT("DIED: %s KILLED: %S"), *DamagedActor->GetName(), *InstigatedBy->GetName());
+			} else {
+				UE_LOG(LogTemp, Warning, TEXT("DIED: %s KILLED: %S"), *DamagedActor->GetName(), *DamageCauser->GetName());
+			}
 			GM->OnActorKilled.Broadcast(GetOwner(), DamageCauser, InstigatedBy);
 		}
 	}
