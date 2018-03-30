@@ -12,9 +12,9 @@ void ASLobbyGameMode::PostLogin(APlayerController* NewPlayer) {
 	Super::PostLogin(NewPlayer);
 	++NumberOfPlayers;
 
-	if (NumberOfPlayers >= 2) {
-		GetWorldTimerManager().SetTimer(GameStartTimer, this, &ASLobbyGameMode::StartGame, 10);
-	}
+	//if (NumberOfPlayers >= 2) {
+	//	GetWorldTimerManager().SetTimer(GameStartTimer, this, &ASLobbyGameMode::StartGame, 10);
+	//}
 }
 
 void ASLobbyGameMode::Logout(AController* Exiting) {
