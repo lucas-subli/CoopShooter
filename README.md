@@ -3,6 +3,7 @@ A FPS project to learn UE4.
 This project is a horde mode Coop Third Person Shooter, together with up to 5 friends online (thorugh STEAM),
 players need to survive the maximum amount of rounds they can.
 The number of enemies keeps growing each round.
+Cel Shading Post process =)
 
 
 ## Video
@@ -17,11 +18,14 @@ What things you need to have to be able to run:
 * Unreal Engine - v4.15+
 * Some C++ compiler and IDE (Visual Studio 2015+ recommended)
 * Steam Online Subsystem and Steam Open when runiong the game
-* A few assets that I used from the marketplace have been removed from their folders as I can't share them. Replace as needed.
+* A few assets that I used from the marketplace have been removed from their folders as I can't share them. 
+Replace as needed.
+Namely: Luo's Impact FX and SuperGrid.
 
 ## Notes
 
-This is a code for learning how to program on the unreal engine, do not expect anything more than some blocks shooting spheres at other blocks with made-in-2-min custom FX. 
+This is a code for learning how to program on the unreal engine, do not expect anything awesome.
+It is mostly rushed and with little regard for code quality.
 
 ## Authors
 
